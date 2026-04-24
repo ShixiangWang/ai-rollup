@@ -1,394 +1,488 @@
 ---
 name: harness-engineering
-description: 通用 AI 研发骨架方法论。适用于从零开始构建或重构项目的全生命周期开发。核心理念：人类掌舵，智能体执行。当用户要求：启动新项目、重构现有系统、建立 AI-first 开发流程、构建 agent 可读的代码库架构、设计反馈回路与验证体系时触发。TRIGGER when: "新项目骨架"、"AI 开发流程"、"智能体优先"、"代码库可读性"、"反馈回路"、"架构约束"。
+description: 通用 AI 研发骨架。简约、可靠、强大、有品。核心理念：代码库是记录系统，智能体是执行者，人类是设计师。适用于全新项目或重构项目的全生命周期。TRIGGER when: "新项目"、"项目骨架"、"研发流程"、"可复现性"、"pipeline"、"分层架构"、"上下文管理"、"反馈回路"。
 ---
 
-# Harness Engineering: AI-First 研发骨架
+# Harness Engineering: 通用 AI 研发骨架
 
-## 核心理念
-
-**人类掌舵，智能体执行。**
-
-工程师的工作不再是编写代码，而是：
-1. **设计环境** — 让智能体能够有效工作的基础设施
-2. **明确意图** — 清晰、可执行的目标与约束
-3. **构建反馈回路** — 自动化的验证、审查与修正机制
-
-稀缺资源是**人类的时间和注意力**，不是代码输出。
+> "简约是复杂的最终形式。" — Da Vinci
 
 ---
 
-## 生命周期阶段
+## 一句话核心理念
 
-### Phase 0: 项目初始化
+**代码库是记录系统，智能体是执行者，人类是设计师。**
 
-**目标**: 从空仓库到可工作的骨架
+稀缺资源：人类注意力 | 上下文窗口 | 可复现性
 
-#### 0.1 仓库结构设计
+---
+
+## 三大原则
+
+### P1: 渐进披露
+
+```
+入口地图（100行）→ 索引 → 按需加载详情
+
+错误：1000页说明书 → 挤掉任务上下文
+正确：地图 + 指向 → 智能体按需探索
+```
+
+### P2: 反馈回路
+
+```
+PreToolUse → 验证门控
+PostToolUse → 自动修正
+Stop → 质量审计
+PreCompact → 状态保存
+
+自动化反馈 > 事后人工审查
+```
+
+### P3: 可复现性契约
+
+```
+环境锁定 → 接触点记录 → 结果签名
+
+每次运行可追溯，每个结果可验证
+```
+
+---
+
+## 项目结构（通用）
 
 ```
 project/
-├── CLAUDE.md           # ~100行，智能体入口地图（NOT 百科全书）
-├── ARCHITECTURE.md     # 架构顶层视图
+├── AGENTS.md              # 入口地图（~100行）
+├── ARCHITECTURE.md        # 架构顶层视图
+├── CONTRACT.md            # 可复现性契约
+│
+├── src/                   # 源代码
+│   ├── domain/            # 领域核心（纯逻辑）
+│   ├── infra/             # 基础设施（IO/外部）
+│   └── entry/             # 入口点（CLI/API）
+│
+├── pipelines/             # 处理管道（生信/科学计算）
+│   ├── stages/            # 阶段定义
+│   └── checkpoints/       # 断点恢复
+│
+├── data/                  # 数据管理
+│   ├── raw/               # 原始数据（不变）
+│   ├── processed/         # 处理结果
+│   └── catalog.json       # 数据目录（FAIR）
+│
+├── experiments/           # 实验记录
+│   ├── exp-001/           # 单次实验
+│   │   ├── config.yaml    # 参数配置
+│   │   ├── results/       # 结果
+│   │   └── checksum.sha256 # 结果签名
+│
 ├── docs/
-│   ├── index.md        # 文档索引
-│   ├── core-beliefs.md # 核心信念与原则
-│   ├── design-docs/    # 设计文档（带验证状态）
-│   ├── exec-plans/     # 执行计划（active/completed）
-│   ├── product-specs/  # 产品规格
-│   ├── references/     # 外部参考（LLM-friendly 格式）
-│   └── tech-debt.md    # 技术债务追踪
-├── src/                # 源代码（按领域分层）
-├── tests/              # 测试（单元/集成/E2E）
-├── scripts/            # 开发脚本与工具
-├── .claude/            # Claude Code 配置
-│   ├── hooks/          # 自动化钩子
-│   ├── agents/         # 子智能体定义
-│   └── memory/         # 项目记忆
-└── evals/              # 评估框架
+│   ├── decisions/         # 决策记录（ADR）
+│   ├── references/        # LLM-friendly 参考
+│   └── garden.log         # 文档园艺日志
+│
+├── tests/
+├── evals/                 # 智能体评估
+└── scripts/
 ```
-
-#### 0.2 渐进式披露原则
-
-**给智能体一张地图，不是一本 1000 页的说明书。**
-
-CLAUDE.md 的作用：
-- 指向更深层次的信息源
-- 定义入口点与导航路径
-- ~100 行，精炼稳定
-
-错误示范：
-- 巨大的指令文件 → 挤掉任务上下文
-- 过多指导 → 智能体局部模式匹配而非有意导航
-- 立即腐烂 → 陈旧规则的坟场
-
-#### 0.3 初始化检查清单
-
-- [ ] CLAUDE.md < 150 行，指向 docs/ 目录
-- [ ] docs/index.md 存在且可导航
-- [ ] 架构分层定义清晰
-- [ ] 依赖方向机械可验证
-- [ ] CI/CD 配置完整（lint, test, build）
-- [ ] 格式化规则统一
-- [ ] 包管理器配置正确
 
 ---
 
-### Phase 1: 架构设计
+## 入口配置（编辑器适配）
 
-**目标**: 建立智能体可推理的约束体系
-
-#### 1.1 分层领域架构
+### 优先级逻辑
 
 ```
-领域边界内：
-Types → Config → Repo → Service → Runtime → UI
-
-横切关注点通过单一接口进入：
-Providers（认证、连接器、遥测、功能标志）
-
-其他任何内容都不被允许，通过自动化强制执行。
+编辑器特定入口 → 优先加载
+AGENTS.md      → 通用后备
 ```
 
-**为什么这很重要**：
-- 智能体在严格边界和可预测结构中最高效
-- 约束一旦编码，立即应用于所有地方
-- 架构漂移是智能体系统的致命伤
+| 编辑器 | 入口文件 | 格式 |
+|--------|----------|------|
+| Claude Code | CLAUDE.md | Markdown |
+| Cursor | .cursorrules | Markdown |
+| VSCode Copilot | .github/copilot-instructions.md | Markdown |
+| Windsurf/Zed | .windsurf/rules / .zed/rules | Markdown |
+| **通用后备** | **AGENTS.md** | Markdown |
 
-#### 1.2 强制执行机制
+### AGENTS.md 模板（~100行）
 
-| 机制 | 工具 | 验证时机 |
-|------|------|----------|
-| 依赖方向 | 自定义 linter | CI 每次提交 |
-| 文件大小 | 结构测试 | pre-commit |
-| 命名约定 | ESLint/Ruff | 编辑时 |
-| 类型边界 | Zod/Pydantic | 运行时 |
-| 日志格式 | 自定义 lint | CI |
+```markdown
+# [项目名]
 
-#### 1.3 品味不变式
+## 一句话使命
+[核心目标]
 
-将主观偏好编码为机械规则：
+## 架构入口
+详见 ARCHITECTURE.md
+
+## 可复现契约
+详见 CONTRACT.md
+
+## 快速命令
+```bash
+[测试] [lint] [构建] [运行]
+```
+
+## 约束
+依赖: domain → infra → entry
+文件: < 800行 | 嵌套: < 4层
+数据: FAIR 原则
+
+## 当前状态
+实验: experiments/exp-XXX
+债务: docs/decisions/TD-XXX
+
+---
+验证: YYYY-MM-DD
+```
+
+---
+
+## 上下文预算
+
+> **200k ≠ 200k 有效空间**
+
+### 黄金法则
+
+```
+配置上限:
+  MCPs:     20-30（定义）
+  Plugins:  10-15（定义）
+  Rules:    20（模块化）
+
+激活上限:
+  MCPs:     < 10
+  Plugins: < 5
+  Rules:    按场景加载
+
+定期审查:
+  状态栏 > 50%: 健康
+  状态栏 30-50%: 警告
+  状态栏 < 30%: 必须清理
+```
+
+---
+
+## 分层架构（领域驱动）
+
+### 核心模式
+
+```
+┌─────────────────────────────────────────┐
+│  Entry Layer（入口）                     │  ← CLI/API/UI
+├─────────────────────────────────────────┤
+│  Infra Layer（基础设施）                 │  ← DB/Cache/HTTP/FS
+├─────────────────────────────────────────┤
+│  Domain Layer（领域）                    │  ← 纯逻辑，无IO
+└─────────────────────────────────────────┘
+
+依赖方向: Domain → Infra → Entry（反向禁止）
+```
+
+### 层职责
+
+| 层 | 职责 | 特征 |
+|----|------|------|
+| Domain | 业务逻辑 | 纯函数、无IO、可测试 |
+| Infra | 基础设施 | IO操作、外部依赖 |
+| Entry | 入口点 | 用户交互、路由 |
+
+### 切分信号
+
+```
+何时切分 Domain:
+  - 文件 > 800 行
+  - 类/模块 > 10 个公开方法
+  - 嵌套 > 4 层
+  - 测试需要 mock 外部依赖
+
+Domain 切分原则:
+  - 按业务概念（不是技术概念）
+  - 高内聚、低耦合
+  - 单一变更原因
+```
+
+---
+
+## Pipeline 模式（科学计算/生信）
+
+### 阶段定义
 
 ```yaml
-golden_principles:
-  - 共享实用工具 > 手写辅助函数（不变式集中）
-  - 类型化 SDK > YOLO 式探测数据（防止猜测结构）
-  - 结构化日志 > 自由文本（可查询可分析）
-  - 早返回 > 深嵌套（可读性）
-  - 文件 < 800 行（导航性）
+# pipelines/stages/process.yaml
+stage: process
+input:
+  - data/raw/*.fastq
+output:
+  - data/processed/*.bam
+params:
+  threads: 8
+  quality_threshold: 30
+
+checkpoint: true  # 支持断点恢复
+retry: 3          # 容错重试
+```
+
+### 并行策略
+
+```
+阶段间: 顺序执行
+阶段内: 并行处理
+
+信号:
+  - 多文件输入 → 并行
+  - 单文件依赖链 → 顺序
+  - checkpoint → 断点恢复
 ```
 
 ---
 
-### Phase 2: 反馈回路
+## 可复现性契约
 
-**目标**: 最大化智能体自主性，最小化人工干预
+### CONTRACT.md 模板
 
-#### 2.1 验证回路
+```markdown
+# 可复现性契约
 
-```
-智能体 → 实现 → 自动测试 → 自动审查 → 反馈处理 → 合并
-                    ↓ 失败
-                  重试/修复 → 新实现
-```
+## 环境锁定
+- 语言版本: [version]
+- 依赖锁定: [lockfile path]
+- 容器镜像: [Dockerfile/Singularity]
 
-#### 2.2 可观测性层
+## 数据溯源
+- 原始数据: data/raw/
+- 处理流程: pipelines/stages/
+- 结果签名: checksum.sha256
 
-让智能体能看到它所影响的世界：
+## 参数记录
+- 配置文件: config.yaml
+- 随机种子: [seed]
 
-```
-┌─────────────────────────────────────────┐
-│  Application (git worktree instance)    │
-├─────────────────────────────────────────┤
-│  Chrome DevTools Protocol → DOM 快照    │
-│  LogQL → 日志查询                        │
-│  PromQL → 指标查询                       │
-│  TraceQL → 追踪查询                      │
-└─────────────────────────────────────────┘
-         ↓ 智能体可读
-┌─────────────────────────────────────────┐
-│  Codex 推理验证修复                      │
-└─────────────────────────────────────────┘
+## 运行验证
+```bash
+python scripts/verify_reproducibility.py
 ```
 
-**实践要点**：
-- 每个 worktree 启动独立实例
-- Chrome DevTools 接入 → 智能体可驱动 UI
-- 本地可观测性堆栈 → 智能体可查询状态
-- 任务完成后临时实例销毁
+## FAIR 状态
+- Findable: ✓ catalog.json
+- Accessible: ✓ 标准路径
+- Interoperable: ✓ 通用格式
+- Reusable: ✓ LICENSE + README
 
-#### 2.3 合并策略
-
-高吞吐量系统需要不同的合并理念：
-
-| 传统理念 | Harness 理念 |
-|----------|--------------|
-| 严格阻塞门 | 最小阻塞 |
-| PR 长生命周期 | PR 短生命周期 |
-| 偶发失败阻塞进展 | 后续重跑解决 |
-| 等待成本低 | 等待成本高 |
-
-**纠错成本低，等待成本高。**
+---
+签名: SHA256:[hash]
+日期: YYYY-MM-DD
+```
 
 ---
 
-### Phase 3: 知识管理
+## 反馈回路实现
 
-**目标**: 让智能体能够发现它需要的一切
+### Hook 配置
 
-#### 3.1 代码库作为记录系统
-
-智能体无法访问的：
-- Google Docs
-- Slack 讨论
-- 会议记录
-- 人类头脑中的知识
-
-**不存在于代码库中的，对智能体就不存在。**
-
-#### 3.2 知识编码策略
-
-| 知识类型 | 存储位置 | 格式 |
-|----------|----------|------|
-| 产品原则 | docs/core-beliefs.md | Markdown |
-| 架构决策 | docs/design-docs/ | ADR 格式 |
-| 技术债务 | docs/tech-debt.md | 追踪表 |
-| 执行计划 | docs/exec-plans/ | 进度日志 |
-| API 参考 | docs/references/*.txt | LLM-friendly |
-
-#### 3.3 文档园艺
-
-定期运行的智能体：
-- 扫描过时文档
-- 检测废弃内容
-- 发起修复 PR
-- 验证交叉链接
-
-**CI 作业验证知识库的更新状况。**
+```json
+{
+  "PreToolUse": [
+    { "matcher": "Bash && command matches 'rm -rf'",
+      "hooks": [{ "type": "block", "message": "破坏性操作需确认" }] },
+    { "matcher": "Bash && command matches '(pytest|cargo test|npm test)',
+      "hooks": [{ "type": "command", "command": "echo '[tmux 提醒] 长运行测试'" }] }
+  ],
+  "PostToolUse": [
+    { "matcher": "Edit && file matches '\\.tsx?$'",
+      "hooks": [{ "type": "command", "command": "prettier --write ${file} && tsc --noEmit" }] },
+    { "matcher": "Edit && file matches '\\.py$'",
+      "hooks": [{ "type": "command", "command": "ruff check ${file} && ruff format ${file}" }] }
+  ],
+  "Stop": [
+    { "matcher": "*",
+      "hooks": [{ "type": "command", "command": "grep -r 'console\\.log|print(' src/ && echo '[警告] 调试语句残留'" }] }
+  ]
+}
+```
 
 ---
 
-### Phase 4: 自主级别演进
+## 子智能体委托
 
-**目标**: 逐步提高智能体的自主能力
+### 委托时机
 
-#### 4.1 自主级别定义
+| 任务类型 | 委托目标 | 工具限制 |
+|----------|----------|----------|
+| 实现规划 | planner | Read, Grep, Glob |
+| 架构设计 | architect | Read, Grep, Glob |
+| 测试驱动 | tdd-guide | Read, Write, Edit, Bash(test) |
+| 代码审查 | code-reviewer | Read, Grep, Glob |
+| 安全审查 | security-reviewer | Read, Grep, Glob |
+| 实验运行 | experiment-runner | Read, Bash, Write(results/) |
+| 文档维护 | doc-gardener | Read, Write, Edit(docs/) |
 
-| 级别 | 能力 | 人工干预 |
-|------|------|----------|
-| L1 | 单文件编辑 | 高 |
-| L2 | 多文件协调 | 中 |
-| L3 | 功能实现 + 测试 | 低 |
-| L4 | 验证 + 审查 + 修复 | 仅判断 |
-| L5 | 端到端功能交付 | 可选 |
+### 委托模式
 
-#### 4.2 L5 端到端能力
+```
+主智能体:
+  1. 定义任务范围
+  2. 设置工具限制
+  3. 启动子智能体
+  4. 等待结果/继续其他工作
 
-给定提示，智能体能够：
-1. 验证代码库当前状态
-2. 重现已报告的漏洞
-3. 录制演示故障的视频
-4. 实施修复措施
-5. 通过运行应用程序验证修复
-6. 录制第二个视频演示解决方案
-7. 打开 Pull Request
-8. 回应智能体和人类反馈
-9. 检测并修复构建故障
-10. 合并更改
+子智能体完成后:
+  5. 主智能体审查结果
+  6. 决定合并或继续迭代
 
-**仅在需要判断时才交由人工处理。**
+收益:
+  - 释放主上下文
+  - 专注执行
+  - 权限隔离
+```
 
 ---
 
-### Phase 5: 熵与质量维护
+## 黄金原则（有品）
 
-**目标**: 防止智能体复制不良模式
+### 上下文原则
 
-#### 5.1 问题识别
+| ID | 原则 | 理由 |
+|----|------|------|
+| C01 | MCPs < 10 活跃 | 上下文消耗 |
+| C02 | Rules 模块化 | 按场景激活 |
+| C03 | 渐进披露 | 按需加载 |
 
-智能体会复制代码库中已存在的模式：
-- 不均衡的模式
-- 不够理想的模式
-- 过时或废弃的模式
+### 代码原则
 
-**熵是必然的，必须主动对抗。**
+| ID | 原则 | 理由 |
+|----|------|------|
+| G01 | 命名揭示意图 | 可读性 |
+| G02 | 函数单一职责 | 可测试性 |
+| G03 | 早返回 | 可读性 |
+| G04 | 文件 < 800 行 | 导航性 |
+| G05 | 嵌套 < 4 层 | 可理解性 |
+| G06 | 类型边界验证 | 可靠性 |
 
-#### 5.2 黄金原则编码
+### 可复现原则
 
-将品味编码为机械规则：
+| ID | 原则 | 理由 |
+|----|------|------|
+| R01 | 环境锁定 | 环境一致性 |
+| R02 | 参数记录 | 参数追溯 |
+| R03 | 结果签名 | 结果验证 |
+| R04 | FAIR 数据 | 数据可发现 |
 
-```python
-# 示例：后台清理任务
-golden_rules = [
-    "shared_utils > hand_rolled_helpers",
-    "typed_sdk > yolo_probing",
-    "structured_logging > free_text",
-    "early_return > deep_nesting",
-    "file_size_limit: 800_lines",
-]
+### 设计原则
 
-def scan_deviation(codebase):
-    """扫描偏差，发起针对性重构 PR"""
-    deviations = detect_violations(codebase, golden_rules)
-    for d in deviations:
-        create_refactor_pr(d)
-```
-
-#### 5.3 垃圾回收式清理
-
-**技术债务像高息贷款：**
-- 每天小额偿还 → 可持续
-- 累积后一次解决 → 痛苦
-
-定期后台任务：
-1. 扫描偏差
-2. 更新质量等级
-3. 发起针对性重构 PR
-4. 一分钟审查后自动合并
+| ID | 原则 | 理由 |
+|----|------|------|
+| D01 | 结构优于注释 | 自解释代码 |
+| D02 | 测试即文档 | 可执行规范 |
+| D03 | 决策即记录 | ADR 可追溯 |
+| D04 | 熵需对抗 | 品味维护 |
 
 ---
 
-## 智能体设计模式
+## CLI 命令
 
-### 深度优先工作
+```bash
+# 初始化新项目
+harness init <name> --language python|typescript|rust
 
-将大目标拆解为构建模块：
+# 架构检查
+harness check [--size] [--nesting] [--deps]
 
+# 可复现验证
+harness verify [--env] [--data] [--checksum]
+
+# 文档园艺
+harness garden [--stale-days 90]
+
+# 黄金原则
+harness golden [--list] [--check]
+
+# 项目状态
+harness status
+
+# 实验记录
+harness experiment start <name>
+harness experiment finish <name>
 ```
-大目标 → 子任务 → 智能体执行 → 验证 → 合并
-           ↓ 失败
-      "需要什么能力？如何让智能体可读可执行？"
-```
-
-### Ralph 循环
-
-```
-智能体 → 自审 → 修改 → 再审 → 循环直到满意 → 合并
-```
-
-**不是等待完美，而是循环迭代。**
-
-### 工具使用模式
-
-智能体直接使用标准开发工具：
-- `gh` — GitHub CLI
-- 本地脚本
-- 嵌入代码仓库的技能
-- MCP 服务器
-
-**无需人工复制粘贴到 CLI。**
 
 ---
 
-## 评估框架
+## 全生命周期流程
 
-### 评估维度
+### Phase 0: 初始化（新项目）
 
-| 维度 | 指标 | 验证方式 |
-|------|------|----------|
-| 功能正确性 | 测试通过率 | CI 自动 |
-| 架构合规性 | lint 通过率 | CI 自动 |
-| 文档完整性 | 覆盖率检查 | 定期扫描 |
-| 可维护性 | 文件大小/嵌套深度 | 结构测试 |
-| 可观测性 | 日志/指标覆盖 | 自动审计 |
+```
+1. harness init → 创建骨架
+2. 编写 AGENTS.md → 定义入口
+3. 编写 CONTRACT.md → 可复现契约
+4. 设置分层架构 → domain/infra/entry
+5. 配置 Hooks → 反馈回路
+6. 初始化 docs/ → 决策记录系统
+```
 
-### 评估执行
+### Phase 0: 适配（重构项目）
 
-1. 每次提交触发 CI
-2. 定期运行后台评估
-3. 偏差自动生成 PR
-4. 人类品味反馈到系统
+```
+1. 分析现有架构 → 映射到分层
+2. 创建 AGENTS.md → 导航现有代码
+3. 建立可复现契约 → 锁定环境
+4. 迁移知识到代码库 → 决策记录
+5. 设置 Hooks → 渐进式反馈回路
+6. 启动文档园艺 → 持续维护
+```
+
+### Phase 1-N: 迭代开发
+
+```
+每个功能:
+  1. 设计决策 → docs/decisions/ADR-XXX.md
+  2. 测试先行 → tests/
+  3. 实现 → src/domain/
+  4. 审查 → code-reviewer 子智能体
+  5. 记录 → 更新实验/文档
+  6. 验证可复现 → harness verify
+```
+
+### Phase Complete: 交付
+
+```
+1. harness status → 健康检查
+2. harness verify → 可复现验证
+3. 文档审计 → garden 最终版
+4. 技术债务清算 → docs/tech-debt.md
+5. 结果签名 → checksum.sha256
+```
 
 ---
 
 ## 参考文件
 
-按需加载以下参考：
+按需加载：
 
-- [references/architecture-patterns.md](references/architecture-patterns.md) — 分层架构详细实现
-- [references/feedback-loops.md](references/feedback-loops.md) — 反馈回路设计详解
-- [references/knowledge-management.md](references/knowledge-management.md) — 知识编码策略
-- [references/golden-principles.md](references/golden-principles.md) — 黄金原则清单
-- [references/cli-scaffold.md](references/cli-scaffold.md) — CLI 脚手架实现
-
----
-
-## 快速启动
-
-### 新项目初始化
-
-```
-/harness-init <project-name>
-```
-
-执行：
-1. 创建仓库结构
-2. 生成 CLAUDE.md 地图
-3. 设置架构约束
-4. 配置 CI/CD
-5. 初始化文档索引
-
-### 现有项目重构
-
-```
-/harness-refactor
-```
-
-执行：
-1. 分析现有架构
-2. 设计分层约束
-3. 迁移知识到代码库
-4. 建立反馈回路
-5. 启动文档园艺
+- [editor-adapters.md](references/editor-adapters.md)
+- [context-management.md](references/context-management.md)
+- [hooks-patterns.md](references/hooks-patterns.md)
+- [reproducibility.md](references/reproducibility.md) — 可复现性详解
+- [pipeline-patterns.md](references/pipeline-patterns.md) — Pipeline 模式
+- [domain-driven.md](references/domain-driven.md) — 领域驱动设计
+- [golden-principles.md](references/golden-principles.md)
 
 ---
 
 ## 关键洞察
 
-> "构建软件仍然需要纪律，但纪律更多地体现在支撑结构上，而不是代码上。"
+> "代码库是记录系统，不存在于此的东西对智能体就不存在。"
 
-> "代码库本地、已版本化的工件是智能体所能看到的全部。"
+> "200k 窗口过度配置后实际只有 70k。"
 
-> "纠错成本低，等待成本高。"
+> "给智能体一张地图，不是一本说明书。"
 
-> "给智能体一张地图，不是一本 1000 页的说明书。"
+> "可复现性是科学计算的生命线。"
+
+> "Pipeline 是生信的标准形态。"
+
+> "熵是必然的，必须主动对抗。"
+
+> "简约是复杂的最终形式。"
